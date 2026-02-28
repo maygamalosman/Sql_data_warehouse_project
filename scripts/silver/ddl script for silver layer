@@ -6,7 +6,7 @@ script purpose :
 	if they already exist.
 	run this code to re-define the ddl structre of 'bronze layer' tables 
 ----------------------------------
-
+*/
 IF OBJECT_ID ('silver.crm_cust_info','U') IS NOT NULL
 	DROP TABLE silver.crm_cust_info;
 
