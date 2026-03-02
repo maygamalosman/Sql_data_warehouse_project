@@ -1,1 +1,427 @@
 
+--For table 'bronze.crm_cust_info'
+---------------------------------------
+-- Check for Nulss or any duplicates in the primary Key 
+--Expectation : No Results 
+
+SELECT cst_id, 
+count (*)
+FROM bronze.crm_cust_info
+GROUP BY cst_id 
+HAVING COUNT(*) > 1 OR cst_id IS NULL
+
+
+-- order the cst_id by the creay_date to keep the old version 
+SELECT * 
+FROM 
+(
+SELECT 
+*,
+ROW_NUMBER() OVER (PARTITION BY cst_id ORDER BY cst_create_date DESC ) AS flag_last
+FROM bronze.crm_cust_info)T
+WHERE  flag_last != 1
+
+-- solution to keep it 
+SELECT * 
+FROM 
+(
+SELECT 
+*,
+ROW_NUMBER() OVER (PARTITION BY cst_id ORDER BY cst_create_date DESC ) AS flag_last
+FROM bronze.crm_cust_info)T
+WHERE  flag_last = 1
+
+
+----------------------------------------------
+-- Check for UNWANTED SPACES in the first name
+--Expectation : No Results 
+
+SELECT cst_firstname
+from bronze.crm_cust_info
+where cst_firstname != trim(cst_firstname)
+
+
+-- Check for UNWANTED SPACES in the last name,firstname and Fill missing values with 'n/a
+--Expectation : No Results 
+
+SELECT cst_firstname
+from bronze.crm_cust_info
+where cst_firstname != trim(cst_firstname)
+
+SELECT cst_lastname
+from bronze.crm_cust_info
+where cst_lastname != trim(cst_lastname)
+----------------------
+-- make the marital_status and gndr  meaningful and user-friendly descriptions.
+SELECT 
+
+CASE WHEN UPPER(TRIM(cst_marital_status)) = 'S' THEN 'Single'
+	 WHEN UPPER(TRIM(cst_marital_status)) = 'M' THEN 'Married'
+	 ELSE 'n/a'
+END cst_marital_status,
+
+CASE WHEN UPPER(TRIM(cst_gndr)) = 'F' THEN 'Female'
+	 WHEN UPPER(TRIM(cst_gndr)) = 'M' THEN 'Male'
+	 ELSE 'n/a'
+END cst_gndr
+
+FROM (
+SELECT 
+*,
+ROW_NUMBER() OVER (PARTITION BY cst_id ORDER BY cst_create_date DESC ) AS flag_last
+FROM bronze.crm_cust_info)t
+WHERE  flag_last = 1
+
+
+
+
+/* 
+
+Final query 
+WHAT DID WE DO HERE?
+
+   Stage 1:
+   Data Cleansing:
+
+   1) Remove unnecessary spaces to ensure data consistency 
+      and uniformity across all records.
+
+   2) Data normalization & standardization:
+      Map coded values to meaningful, user-friendly descriptions.
+
+   3) Handle missing values:
+    Standardize unknown categorical values using a default 'n/a' label.
+
+   4) Remove duplicates:
+      Ensure only one record per entity by identifying 
+      and retaining the most relevant row.
+
+
+   Stage 2:
+   Load the cleaned data from the crm_cust_info table 
+   into the Silver layer.
+
+*/
+
+
+SELECT 
+cst_id,
+cst_key,
+TRIM(cst_firstname) As cst_firstname,
+TRIM(cst_lastname)AS cst_lastname,
+
+CASE WHEN UPPER(TRIM(cst_marital_status)) = 'S' THEN 'Single'
+	 WHEN UPPER(TRIM(cst_marital_status)) = 'M' THEN 'Married'
+	 ELSE 'n/a'
+END cst_marital_status,
+
+CASE WHEN UPPER(TRIM(cst_gndr)) = 'F' THEN 'Female'
+	 WHEN UPPER(TRIM(cst_gndr)) = 'M' THEN 'Male'
+	 ELSE 'n/a'
+END cst_gndr,
+cst_create_date
+FROM (
+SELECT 
+*,
+ROW_NUMBER() OVER (PARTITION BY cst_id ORDER BY cst_create_date DESC ) AS flag_last
+FROM bronze.crm_cust_info
+WHERE cst_ID  IS NOT NULL
+)t
+WHERE  flag_last = 1 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+--For table 'bronze.crm_prd_info'
+-----------------------------------
+--check for nulls or duplicaties in the prod_key 
+--Expectation : no duplicats
+
+
+SELECT 
+prd_key,
+COUNT(*)
+FROM bronze.crm_prd_info
+GROUP BY prd_key
+HAVING COUNT(*) > 1 OR prd_key IS NULL
+---
+
+/* Why didn`t we validate uniqueness using the primary key (prd_id)?
+
+The Product table follows a Slowly Changing Dimension (SCD Type 2) pattern.
+Therefore, uniqueness is validated using (prd_key + prd_start_dt)
+instead of prd_id.
+*/
+
+-- To standardize cat_id between crm_prd_info and erp_px_cat_g1v2,
+-- replace '-' with '_' to ensure consistent formatting.
+SELECT 
+prd_id,
+prd_key,
+REPLACE (SUBSTRING(prd_key,1,5), '-' ,'_')  AS cat_id ,
+prd_nm,
+prd_cost,
+prd_line,
+prd_start_dt,
+prd_end_dt
+FROM bronze.crm_prd_info
+WHERE REPLACE (SUBSTRING(prd_key,1,5), '-' ,'_')  NOT IN (
+SELECT DISTINCT id FROM bronze.erp_px_cat_g1v2)
+
+-- To standardize prd_key between crm_prd_info and crm_sales_details,
+-- extract the product identifier starting from position 7.
+SELECT 
+prd_id,
+prd_key,
+REPLACE (SUBSTRING(prd_key,1,5), '-' ,'_')  AS cat_id ,
+SUBSTRING(prd_key,7,len(prd_key))  AS	prd_key ,
+prd_nm,
+prd_cost,
+prd_line,
+prd_start_dt,
+prd_end_dt
+FROM bronze.crm_prd_info
+WHERE SUBSTRING(prd_key,7,len(prd_key))
+ NOT IN (
+SELECT DISTINCT sls_prd_key FROM bronze.crm_sales_details)
+
+
+-- ckeck the prd_cost nulls or douplicaties 
+SELECT prd_cost ,prd_id
+FROM bronze.crm_prd_info
+WHERE prd_cost < 0 OR prd_cost IS NULL 
+
+--to solve it
+
+SELECT 
+prd_id,
+
+ISNULL(prd_cost,0) AS prd_cost
+FROM bronze.crm_prd_info
+
+-- Standardized prd_line values by replacing coded values with descriptive names and replacing NULLs with 'n/a'.
+
+SELECT
+CASE UPPER(TRIM(prd_line))
+	 WHEN 'M' THEN 'Mountain'
+	 WHEN 'R' THEN 'Road'
+	 WHEN 'S' THEN 'Other Sales'
+	 WHEN 'T' THEN 'Touring'
+	 ELSE 'n/a'
+END AS prd_line
+FROM bronze.crm_prd_info
+
+
+/* Check date validity:
+Ensure prd_end_dt is not earlier than prd_start_dt.
+
+To resolve this:
+Keep prd_start_dt as is and calculate prd_end_dt
+as one day before the next prd_start_dt
+for the same product (SCD logic).
+*/
+
+
+SELECT *
+FROM bronze.crm_prd_info
+WHERE prd_end_dt < prd_start_dt
+
+SELECT 
+CAST (prd_start_dt AS DATE ) AS prd_start_dt ,
+CAST (LEAD (prd_start_dt) OVER (PARTITION BY prd_key ORDER BY prd_start_dt)-1 AS DATE) AS prd_end_dt
+FROM bronze.crm_prd_info
+
+/*
+the final quary
+WHAT WE DID HERE?
+
+- Double-checked that prd_id has no duplicates → result is clean.
+- Extracted the category ID from prd_key.
+- Extracted the product ID from prd_key.
+- Replaced NULL values in prd_cost with 0 and ensured there are no negative values.
+- Standardized prd_line values by replacing coded values with descriptive names and replacing NULLs with 'n/a'.
+- Calculated prd_end_dt as one day before the next prd_start_dt (for the same product).
+- Adjusted the Silver layer table structure to match the new modifications.
+- Inserted the cleaned and transformed data into the Silver layer table.
+
+*/
+
+
+SELECT 
+prd_id,
+REPLACE (SUBSTRING(prd_key,1,5), '-' ,'_')  AS cat_id ,
+SUBSTRING(prd_key,7,len(prd_key))  AS prd_key ,
+prd_nm,
+ISNULL(prd_cost,0) AS prd_cost,
+CASE UPPER(TRIM(prd_line))
+	 WHEN 'M' THEN 'Mountain'
+	 WHEN 'R' THEN 'Road'
+	 WHEN 'S' THEN 'Other Sales'
+	 WHEN 'T' THEN 'Touring'
+	 ELSE 'n/a'
+END AS prd_line,
+CAST (prd_start_dt AS DATE ) AS prd_start_dt ,
+CAST (LEAD (prd_start_dt) OVER (PARTITION BY prd_key ORDER BY prd_start_dt)-1 AS DATE) AS prd_end_dt
+FROM bronze.crm_prd_info
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+--For table 'bronze.crm_sales_details'
+---------------------------------------------------------------------
+
+-- Check for unwanted spaces in sls_ord_num
+-- Expectation: No results
+
+    SELECT
+       sls_ord_num
+      ,sls_prd_key
+      ,sls_cust_id
+      ,sls_order_dt
+      ,sls_ship_dt
+      ,sls_due_dt
+      ,sls_sales
+      ,sls_quantity
+      ,sls_price
+  FROM bronze.crm_sales_details
+  WHERE sls_ord_num != TRIM (sls_ord_num)
+
+-- Ensure all sls_prd_key values exist in Silver.crm_prd_info
+-- Expectation: No orphan product keys
+  SELECT 
+       sls_ord_num
+      ,sls_prd_key
+      ,sls_cust_id
+      ,sls_order_dt
+      ,sls_ship_dt
+      ,sls_due_dt
+      ,sls_sales
+      ,sls_quantity
+      ,sls_price
+  FROM bronze.crm_sales_details
+  WHERE sls_prd_key  NOT IN (SELECT prd_key FROM SILVER.crm_PRD_info)
+
+  
+-- Ensure all sls_cust_id values exist in Silver.crm_cust_info
+-- Expectation: No orphan customer IDs
+     SELECT
+       sls_ord_num
+      ,sls_prd_key
+      ,sls_cust_id
+      ,sls_order_dt
+      ,sls_ship_dt
+      ,sls_due_dt
+      ,sls_sales
+      ,sls_quantity
+      ,sls_price
+  FROM bronze.crm_sales_details
+  WHERE sls_cust_id  NOT IN (SELECT cst_id FROM SILVER.crm_CuST_info)
+
+
+-- Validate date format (should be 8 digits: YYYYMMDD)
+-- Check for invalid date values (negative, zero, unrealistic future dates)
+
+  SELECT 
+  sls_order_dt
+  FROM bronze.crm_sales_details
+  WHERE LEN(sls_order_dt) >8
+
+  SELECT 
+  NULLIF (sls_order_dt,0) AS sls_order_dt
+  FROM bronze.crm_sales_details
+  WHERE sls_order_dt < = 0 OR LEN(sls_order_dt) != 8 OR  sls_order_dt > 20500101
+
+   -- OK 
+ SELECT 
+  sls_ship_dt
+  FROM bronze.crm_sales_details
+  WHERE sls_ship_dt <= 0 OR LEN(sls_ship_dt) > 8
+
+  -- OK 
+ SELECT 
+ sls_due_dt
+  FROM bronze.crm_sales_details
+  WHERE sls_due_dt < = 0
+
+
+
+ 
+-- Validate logical date sequence
+-- Order date should not be after ship date or due date
+  SELECT *
+  FROM bronze.crm_sales_details
+  WHERE sls_order_dt > sls_ship_dt OR sls_order_dt >sls_due_dt
+
+
+  -- Validate business rule:
+-- Sales = Price × Quantity
+-- Values must not be NULL, zero, or negative
+
+
+
+  SELECT  DISTINCT
+     sls_sales AS OLD_SALES
+    ,sls_price AS OLD_PRICE 
+    ,sls_quantity,
+
+CASE WHEN sls_sales is NULL OR sls_sales <= 0 OR sls_sales != sls_quantity * ABS(sls_price)
+     Then sls_quantity * ABS(sls_price)
+     ELSE sls_sales
+END AS  sls_sales,
+CASE WHEN sls_price is NULL OR sls_price <=0
+        THEN sls_sales/ NUllif (sls_quantity ,0)
+      ELSE sls_price 
+END AS sls_price
+
+  FROM silver.crm_sales_details
+  WHERE sls_sales !=sls_quantity *sls_price
+  OR sls_sales IS NULL OR sls_quantity IS NULL OR sls_price IS NULL 
+  OR sls_sales <=0 OR sls_quantity <=0  OR sls_price <=0 
+  ORDER BY sls_sales, sls_quantity ,sls_price 
+
+  -- IF SALES IS NEGATIVE, ZERO or null, derive it using quantity and price equation 
+  -- IF price is zero or null, calculate using sales and quantity 
+  -- IF price is negative, convert it to a positive value
+
+  --final solution :
+
+  /* What we did here:
+
+- Handled invalid date values by validating their format.
+- Cast date fields to the proper DATE data type.
+- Handled missing or invalid values in price and sales.
+- Applied business rule validation using:
+  Sales = Price × Quantity
+*/
+SELECT sls_ord_num
+      ,sls_prd_key
+      ,sls_cust_id
+      ,CASE 
+            WHEN  sls_order_dt = 0 OR LEN (sls_order_dt) != 8 THEN NULL
+            ELSE CAST( CAST (sls_order_dt AS VARCHAR)AS DATE )
+      END AS sls_order_dt 
+      
+      ,CASE 
+            WHEN  sls_ship_dt = 0 OR LEN (sls_ship_dt) != 8 THEN NULL
+            ELSE CAST( CAST (sls_ship_dt AS VARCHAR)AS DATE )
+     
+     END AS sls_ship_dt
+     
+     ,CASE 
+            WHEN  sls_due_dt = 0 OR LEN (sls_due_dt) != 8 THEN NULL
+            ELSE CAST( CAST (sls_due_dt AS VARCHAR)AS DATE )
+      END AS sls_due_dt,
+CASE WHEN sls_sales is NULL OR sls_sales <= 0 OR sls_sales != sls_quantity * ABS(sls_price)
+     Then sls_quantity * ABS(sls_price)
+     ELSE sls_sales
+END AS  sls_sales,
+sls_quantity,
+CASE WHEN sls_price is NULL OR sls_price <=0
+        THEN sls_sales/ NUllif (sls_quantity ,0)
+      ELSE sls_price 
+END AS sls_price
+
+FROM bronze.crm_sales_details
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
