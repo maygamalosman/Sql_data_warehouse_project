@@ -1,151 +1,164 @@
-# Sql_data_warehouse_project
-Building a modern Data Warehouse with SQL server, including ETL processes, data modeling, and analytics 
+# 📊 SQL Data Warehouse Project
 
-📌Project Overview
+Building a modern Data Warehouse using Microsoft SQL Server, including ETL processes, data modeling, and analytics-ready structures.
 
-Welcome to the SQL Data Warehouse Project.
+## 📌 Project Overview
 
-This project was built by May Osman as part of the Full SQL Course by Baraa Khatib Salkini.
-It follows the complete step-by-step roadmap provided in his YouTube course and reflects real-world data engineering and analytics workflows.
+This project demonstrates the end-to-end implementation of a **modern data warehouse solution** following industry best practices.
 
-You can find Baraa’s channel here:
-🔗 https://www.youtube.com/@DataWithBaraa
+It was built by **May Osman** as part of a structured SQL learning journey, inspired by real-world data engineering workflows.
 
-To stay organized I created a full Notion project workspace also to avoid chaos, and validate progress.
+The project simulates how organizations transform raw data into **business-ready insights**.
 
-You can view my Notion roadmap here:
-🔗 https://www.notion.so/Data-Warehouse-Project-2ddd5da8dfd28068997dd3e88ab2c7c6
+<img width="1207" height="755" alt="DWH Layers" src="https://github.com/user-attachments/assets/67896bf3-e2d9-40ed-9cb3-648f83824755" />
 
-🏗️ Architecture
+---
+## 🎯 Project Objectives
 
-This project follows the Medallion Architecture:
+* Design a scalable Data Warehouse architecture
+* Implement ETL pipelines across multiple layers
+* Clean, standardize, and transform raw data
+* Build a **Star Schema** for analytics
+* Enable reporting and data-driven decision making
+---
 
-Bronze Layer → Raw data from source systems
+## 🏗️ Architecture
 
-Silver Layer → Cleaned & standardized data
+This project follows the **Medallion Architecture**:
 
-Gold Layer → Business-ready analytical tables
+* 🟤 **Bronze Layer** → Raw data (as-is from source systems)
+* ⚪ **Silver Layer** → Cleaned and standardized data
+* 🟡 **Gold Layer** → Business-ready analytical models
+<img width="1415" height="747" alt="Integration model" src="https://github.com/user-attachments/assets/b3bad547-c4eb-472f-ac44-66a0d8549b15" />
 
-📏 General Design Principles
 
-To ensure consistency, quality, and scalability, the following rules are applied:
 
-General Principles
 
-Naming convention: snake_case (lowercase, underscore separated)
+## 🔄 Data Flow
 
-Language: English only
+Source Systems (CRM & ERP) → Bronze → Silver → Gold → Reporting / Analytics
+ ---<img width="1215" height="802" alt="Data Flow Diagram" src="https://github.com/user-attachments/assets/65852194-8f3c-4a44-ba54-4f2b7d3b4cff" />
+---
 
-Reserved words: Avoid SQL reserved words as object names
+## 🧱 Data Modeling
 
-🧱 Table Naming Conventions
-🟤 Bronze Layer
+The Gold Layer is designed using a **Star Schema**:
+<img width="788" height="767" alt="Star Schema" src="https://github.com/user-attachments/assets/b76f9ff4-8b73-4b10-a0f4-04b4a0508283" />
 
-Tables must keep the original source structure
 
-Format:
+* **Fact Table**
 
-<sourcesystem>_<entity>
+  * `fact_sales`
 
+* **Dimension Tables**
 
-Examples:
+  * `dim_customers`
+  * `dim_products`
 
-crm_customer_info
-erp_sales_orders
+This structure enables efficient querying and supports BI tools like Power BI.
 
-⚪ Silver Layer
+---
 
-Same naming pattern as Bronze
+## ⚙️ ETL Process
 
-Represents cleaned and standardized versions of the source tables
+Data is processed through structured layers:
 
-<sourcesystem>_<entity>
+### 🟤 Bronze Layer
 
+* Stores raw data from source systems
+* No transformations applied
+* Supports full load & batch processing
 
-Examples:
+### ⚪ Silver Layer
 
-crm_customer_info
-erp_sales_orders
+* Data cleaning and standardization
+* Handling missing values
+* Data normalization & enrichment
 
-🟡 Gold Layer
+### 🟡 Gold Layer
 
-Business-friendly names
+* Business logic implementation
+* Data integration across sources
+* Creation of analytical views (fact & dimensions)
 
-Format:
+---
 
-<category>_<entity>
+## 📏 Design Standards
 
+### 🔹 Naming Conventions
 
-Where:
+* snake_case for all objects
+* English naming only
+* Avoid SQL reserved keywords
 
-dim_ = Dimension tables
+---
 
-fact_ = Fact tables
+### 🧱 Table Naming
 
-agg_ = Aggregated tables
+| Layer  | Format              | Example                    |
+| ------ | ------------------- | -------------------------- |
+| Bronze | `<source>_<entity>` | crm_sales_details          |
+| Silver | `<source>_<entity>` | erp_cust_info              |
+| Gold   | `<type>_<entity>`   | dim_customers / fact_sales |
 
-Examples:
+---
 
-Pattern	Meaning	Example
-dim_	Dimension table	dim_customers
-fact_	Fact table	fact_sales
-agg_	Aggregated table	agg_sales_monthly
-🧩 Column Naming Conventions
-Surrogate Keys
+### 🧩 Column Naming
 
-All primary keys in dimension tables must use the suffix _key.
+* Surrogate Keys → `<table>_key`
 
-Format:
+  * Example: `customer_key`
 
-<table_name>_key
+* Technical Columns → `dwh_<column>`
 
+  * Example: `dwh_load_date`
 
-Example:
+---
 
-customer_key   -- Surrogate key in dim_customers
+### ⚙️ Stored Procedures
 
+| Purpose     | Naming        |
+| ----------- | ------------- |
+| Load Bronze | `load_bronze` |
+| Load Silver | `load_silver` |
+| Load Gold   | `load_gold`   |
 
-These keys ensure stable joins and support slowly changing dimensions.
+---
 
-Technical Columns
+## 🧠 Key Skills Demonstrated
 
-All system-generated metadata columns must start with dwh_.
+* SQL (Joins, Window Functions, CASE, COALESCE)
+* Data Modeling (Star Schema)
+* ETL Design
+* Data Cleaning & Transformation
+* Analytical Thinking
 
-Format:
+---
 
-dwh_<description>
+## 🚀 Business Value
 
+This project shows how raw data can be transformed into:
 
-Example:
+* Actionable insights
+* Structured reporting datasets
+* Scalable analytics solutions
 
-dwh_load_date   -- Date when the record was loaded into the warehouse
+---
 
-⚙️ Stored Procedure Naming
+## 📂 Project Resources
 
-All ETL loading procedures follow this pattern:
+* 📺 Course Reference:
+  [https://www.youtube.com/@DataWithBaraa](https://www.youtube.com/@DataWithBaraa)
 
-load_<layer>
+* 🗂️ Project Planning (Notion):
+  [https://www.notion.so/Data-Warehouse-Project-2ddd5da8dfd28068997dd3e88ab2c7c6](https://www.notion.so/Data-Warehouse-Project-2ddd5da8dfd28068997dd3e88ab2c7c6)
 
+---
 
-Examples:
+## 💡 Future Improvements
 
-load_bronze
-load_silver
-load_gold
+* Add incremental loading
+* Implement Slowly Changing Dimensions (SCD)
+* Connect to BI dashboard
+* Optimize query performance
 
-
-These procedures handle data movement and transformation between layers.
-
-🎯 Goal of This Project
-
-This project simulates how real data engineering teams design, load, and manage enterprise-grade data warehouses.
-
-It demonstrates:
-
-ETL design
-
-Layered architecture
-
-Data modeling
-
-Business-ready analytics
