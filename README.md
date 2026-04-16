@@ -155,11 +155,4 @@ This project shows how raw data can be transformed into:
 - 📺 **Course Reference:** [Data With Baraa](https://www.youtube.com/@DataWithBaraa)
 - 🗂️ **Project Planning (Notion):** [Data Warehouse Project](https://www.notion.so/Data-Warehouse-Project-2ddd5da8dfd28068997dd3e88ab2c7c6)
 
----
 
-## 💡 Future Improvements
-
-- Add incremental loading
-- Implement Slowly Changing Dimensions (SCD)
-- Connect to BI dashboard
-- Optimize query performance
