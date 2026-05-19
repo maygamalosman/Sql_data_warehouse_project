@@ -381,7 +381,7 @@ last_sales_date,
 recency,
 CASE 
 	WHEN total_sales > 50000 THEN 'High- performance'
-	WHEN total_sales > 50000 THEN 'Mid- range'
+	WHEN total_sales >=  10000 THEN 'Mid- range'
 	ELSE 'Low- performer'
 	END AS product_segment,
 lifespan,
