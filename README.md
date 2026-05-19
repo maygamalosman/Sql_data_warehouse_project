@@ -1,24 +1,23 @@
 # 📊 SQL Data Warehouse Project
 
-> Building a modern Data Warehouse using **Microsoft SQL Server**, including ETL processes, data modeling, and analytics-ready structures.
+> Building a modern Data Warehouse using Microsoft SQL Server, including ETL processes, data modeling, and analytics-ready structures.
 
 ---
 
 ## 📌 Project Overview
 
-This project demonstrates the end-to-end implementation of a modern data warehouse solution following industry best practices.
-
-It was built by **May Osman** as part of a structured SQL learning journey, inspired by real-world data engineering workflows. The project simulates how organizations transform raw data into business-ready insights.
+This project demonstrates the end-to-end implementation data with baraa  project on his youtube channel as  of a modern data warehouse solution following industry best practices.
+It was built by May Osman as part of a structured SQL learning journey, inspired by real-world data engineering workflows. The project simulates how organizations transform raw data into business-ready insights.
 
 ---
 
 ## 🎯 Project Objectives
 
-- Design a scalable Data Warehouse architecture
-- Implement ETL pipelines across multiple layers
-- Clean, standardize, and transform raw data
-- Build a Star Schema for analytics
-- Enable reporting and data-driven decision making
+Design a scalable Data Warehouse architecture
+Implement ETL pipelines across multiple layers
+Clean, standardize, and transform raw data
+Build a Star Schema for analytics
+Enable reporting and data-driven decision making
 
 ---
 
@@ -139,6 +138,78 @@ This structure enables efficient querying and supports BI tools like **Power BI*
 - Analytical Thinking
 
 ---
+## 📊Analytics & Reporting Queries
+ 
+The project includes a full set of SQL analytics queries applied on the Gold Layer, organized into the following categories:
+1️⃣ Database & Dimensions Exploration
+Understand the structure of the data before analysis:
+
+Explore all tables and columns via INFORMATION_SCHEMA
+Identify distinct countries, product categories, and subcategories
+Find the date range of orders and customer age range
+
+2️⃣ Measures Exploration
+Calculate high-level KPIs across the business:
+
+Total Sales, Total Sold Items, Average Selling Price
+Total Orders, Total Products, Total Customers
+Consolidated KPI report using UNION ALL
+
+3️⃣ Magnitude Analysis
+Understand the scale of different dimensions:
+
+Total customers by country and gender
+Total products and average cost per category
+Total revenue per category and per customer
+Distribution of sold items across countries
+
+4️⃣ Ranking Analysis
+Identify top and bottom performers:
+
+Top 5 highest-revenue products (using TOP and RANK())
+Bottom 5 worst-performing products
+Top 10 customers by revenue
+Top 3 customers with the fewest orders
+
+5️⃣ Changes Over Time Analysis
+Track trends across time dimensions:
+
+Sales, customers, and quantity grouped by year
+Monthly breakdown using YEAR()/MONTH(), DATETRUNC(), and FORMAT()
+
+6️⃣ Cumulative Analysis
+Calculate running and moving metrics:
+
+Running total of sales over time using SUM() OVER (ORDER BY ...)
+Yearly product performance vs. average and previous year using LAG() and window functions
+
+7️⃣ Part-to-Whole Analysis
+Understand contribution percentages:
+
+Which categories contribute most to overall sales
+Percentage of total sales per category using SUM() OVER()
+
+8️⃣ Data Segmentation
+Group data into meaningful buckets:
+
+Products segmented by cost range (<500, 500–1000, etc.)
+Customers segmented into VIP, Regular, and New based on spend and lifespan
+
+9️⃣ Customer Report View (gold.report_customer)
+A consolidated view with:
+
+Customer demographics (age, age group, country)
+Transaction metrics: total orders, sales, quantity, products
+Behavioral KPIs: recency, avg order value, avg monthly spend
+Segment classification: VIP / Regular / New
+
+🔟 Product Report View (gold.report_products)
+A consolidated view with:
+
+Product details: category, subcategory, cost
+Sales metrics: total orders, revenue, quantity, unique customers
+Performance KPIs: recency, avg order revenue, avg monthly revenue
+Segment classification: High-Performance / Mid-Range / Low-Performer
 
 ## 🚀 Business Value
 
@@ -147,8 +218,17 @@ This project shows how raw data can be transformed into:
 - ✅ Actionable insights
 - ✅ Structured reporting datasets
 - ✅ Scalable analytics solutions
+## 🚀 Future Enhancements
 
----
+Planned future improvements include:
+
+- Power BI Dashboard Integration
+- Incremental Loading Strategy
+- SQL Performance Optimization
+- Automated Scheduling
+- Data Quality Monitoring
+- Cloud Migration (Azure / Snowflake)
+
 
 ## 📂 Project Resources
 
